@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Qard - Networking Industrial Premium</title>
+    <meta name="description" content="Qard es la plataforma de networking premium para consultores IT y ventas industriales. Escanea, guarda y gestiona tus contactos de alto nivel.">
+    
+    <!-- Google Fonts: Inter & Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <link rel="stylesheet" href="./style.css">
+    <style>
+        /* Basic LinkedIn branding colors */
+        :root {
+            --linkedin-blue: #0077b5;
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="app-container">
+        <!-- Screens will be injected here -->
+        <main id="main-content"></main>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <button class="nav-item active" id="nav-my-qard" data-screen="my-qard">
+                <i data-lucide="qr-code"></i>
+                <span>My Qard</span>
+            </button>
+            <button class="nav-item" id="nav-scan" data-screen="scan">
+                <i data-lucide="scan"></i>
+                <span>Scan</span>
+            </button>
+            <button class="nav-item" id="nav-contacts" data-screen="contacts">
+                <i data-lucide="users"></i>
+                <span>Network</span>
+            </button>
+            <button class="nav-item" id="nav-config" data-screen="config">
+                <i data-lucide="settings"></i>
+                <span>Config</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- Contact Detail Overlay Container -->
+    <div id="contact-overlay" class="detail-overlay"></div>
+
+    <script type="module" src="./main.js"></script>
+</body>
+</html>
