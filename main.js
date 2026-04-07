@@ -174,6 +174,91 @@ const screens = {
             </div>
         </div>
     `,
+    'cards': () => `
+        <div class="screen-fade">
+             <header class="top-bar">
+                <div class="top-left">
+                    <button class="btn-hamburger">
+                        <i data-lucide="menu"></i>
+                    </button>
+                    <span class="logo-q">Tarjetas</span>
+                </div>
+                <div class="user-avatar-mini" onclick="renderScreen('config')">
+                    <img src="${currentUser.avatar}" alt="User">
+                </div>
+            </header>
+
+            <h1 class="section-title">Card Gallery</h1>
+            <p class="section-subtitle">Tus contactos en formato premium.</p>
+
+            <div class="cards-gallery-container">
+                ${(() => {
+                    const galleryContacts = [...new Map([...recentContacts, ...allContacts].map(item => [item.id, item])).values()];
+                    if (galleryContacts.length === 0) return '<p style="padding:40px; text-align:center; color:var(--text-muted)">No hay contactos sincronizados.</p>';
+                    return galleryContacts.map(c => `
+                        <div class="business-card-wrapper" onclick="this.classList.toggle('flipped')">
+                            <div class="business-card" style="--card-accent: ${['#3b82f6', '#8b5cf6', '#f59e0b', '#ec4899'][c.id % 4]}">
+                                <div class="card-front">
+                                    <div class="card-glass-body">
+                                        <div class="card-header-row">
+                                            <div class="card-logo-area">
+                                                <div class="logo-circle">
+                                                    <i data-lucide="building-2"></i>
+                                                </div>
+                                                <span class="card-company-name">${c.company}</span>
+                                            </div>
+                                            <div class="card-qr-mini">
+                                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(generateVCard(c))}" alt="QR">
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="card-main-info">
+                                            <h3 class="card-user-name">${c.name}</h3>
+                                            <p class="card-user-role">${c.role || 'Consultor Industrial'}</p>
+                                        </div>
+
+                                        <div class="card-contact-footer">
+                                            <div class="footer-item">
+                                                <i data-lucide="phone" size="10"></i>
+                                                <span>${c.phone}</span>
+                                            </div>
+                                            <div class="footer-item">
+                                                <i data-lucide="mail" size="10"></i>
+                                                <span>${c.name.toLowerCase().replace(/\s/g, '.')}@${c.company.toLowerCase().replace(/\s/g, '')}.com</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="card-accent-blobs">
+                                            <div class="blob-1"></div>
+                                            <div class="blob-2"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-back">
+                                    <div class="card-glass-body back-content">
+                                        <div class="back-logo">
+                                            <span class="logo-q" style="font-size:32px;">Qard</span>
+                                            <p>Industrial Networking ID</p>
+                                        </div>
+                                        <div class="card-actions-row">
+                                            <button class="btn-card-action" onclick="event.stopPropagation(); window.downloadContact(${c.id})">
+                                                <i data-lucide="download"></i>
+                                                VCF
+                                            </button>
+                                            <button class="btn-card-action" onclick="event.stopPropagation(); window.showContactDetail(${c.id})">
+                                                <i data-lucide="eye"></i>
+                                                Perfil
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                })()}
+            </div>
+        </div>
+    `,
     'scan': () => `
         <div id="camera-view" class="screen-fade">
             <div id="video-placeholder">
@@ -261,6 +346,10 @@ window.showContactDetail = (contactId) => {
                         <i data-lucide="linkedin"></i>
                         LinkedIn
                     </button>
+                    <button class="btn-premium-social" onclick="window.showAsBusinessCard(${contact.id})" style="grid-column: span 2; background: var(--gradient-blue); border:none;">
+                        <i data-lucide="credit-card"></i>
+                        VER TARJETA DE PRESENTACIÓN
+                    </button>
                     <button class="btn-premium-social" onclick="window.open('tel:${contact.phone}')" style="grid-column: span 2;">
                         <i data-lucide="phone"></i>
                         Llamar a ${contact.name.split(' ')[0]}
@@ -282,6 +371,13 @@ window.showContactDetail = (contactId) => {
         </div>
     `;
     lucide.createIcons();
+};
+
+window.showAsBusinessCard = (id) => {
+    const overlay = document.getElementById('contact-overlay');
+    overlay.style.display = 'none'; // Simple approach: jump to cards gallery or filter there
+    renderScreen('cards');
+    // Scroll to specific card if needed, but for now just showing the gallery
 };
 
 window.downloadContact = (id) => {
