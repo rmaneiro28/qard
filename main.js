@@ -4,28 +4,55 @@ const currentUser = {
     role: "Consultor IT / Ventas Industriales",
     company: "Oterventas",
     handle: "@Oterventas",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Ruvel"
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Ruvel",
+    phone: "+584120000000",
+    linkedin: "ruvel-maneiro",
+    whatsapp: "584120000000"
 };
 
 const recentContacts = [
-    { id: 1, name: "Félix Aranzábal", company: "Logística Global S.A.", time: "Hoy", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" },
-    { id: 2, name: "Elena Valdés", company: "Innovation Hub", time: "Ayer", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Elena" },
-    { id: 3, name: "Oscar Mendoza", company: "Sistemas Industriales S.L.", time: "12 Oct", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Oscar" }
+    { id: 1, name: "Félix Aranzábal", company: "Logística Global S.A.", time: "Hoy", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix", phone: "+584141112233", whatsapp: "584141112233", linkedin: "felix-a" },
+    { id: 2, name: "Elena Valdés", company: "Innovation Hub", time: "Ayer", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Elena", phone: "+584144445566", whatsapp: "584144445566", linkedin: "elena-v" },
+    { id: 3, name: "Oscar Mendoza", company: "Sistemas Industriales S.L.", time: "12 Oct", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Oscar", phone: "+584167778899", whatsapp: "584167778899", linkedin: "oscar-m" }
 ];
 
-const allContacts = [
-    { id: 4, name: "Elena Rodriguez", role: "Chief Product Officer", company: "STARLIGHT FINTECH", linkedin: "linkedin.com/in/elena-rod", synced: true, avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=ElenaR" },
-    { id: 5, name: "Marcus Thorne", role: "Head of Investment", company: "VORTEX CAPITAL", linkedin: "linkedin.com/in/mthorne", synced: true, avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Marcus" },
-    { id: 6, name: "Sophia Chen", role: "Creative Director", company: "PIXEL & GRAIN", linkedin: "linkedin.com/in/schen", synced: false, avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sophia" },
-    { id: 7, name: "David Kim", role: "Full Stack Engineer", company: "HYPERION LABS", linkedin: "linkedin.com/in/dkim", synced: true, avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=David" }
+let allContacts = [
+    { id: 4, name: "Elena Rodriguez", role: "Chief Product Officer", company: "STARLIGHT FINTECH", linkedin: "elena-rod", synced: true, avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=ElenaR", phone: "+123456789", whatsapp: "123456789" },
+    { id: 5, name: "Marcus Thorne", role: "Head of Investment", company: "VORTEX CAPITAL", linkedin: "mthorne", synced: true, avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Marcus", phone: "+198765432", whatsapp: "198765432" },
+    { id: 6, name: "Sophia Chen", role: "Creative Director", company: "PIXEL & GRAIN", linkedin: "schen", synced: false, avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sophia", phone: "+1122334455", whatsapp: "1122334455" },
+    { id: 7, name: "David Kim", role: "Full Stack Engineer", company: "HYPERION LABS", linkedin: "dkim", synced: true, avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=David", phone: "+1555666777", whatsapp: "1555666777" }
 ];
 
 // State
 let currentScreen = 'my-qard';
+let cameraStream = null;
 
 // DOM Elements
 const mainContent = document.getElementById('main-content');
 const navItems = document.querySelectorAll('.nav-item');
+
+// Utils
+const generateVCard = (contact) => {
+    return `BEGIN:VCARD
+VERSION:3.0
+FN:${contact.name}
+ORG:${contact.company}
+TITLE:${contact.role || ''}
+TEL;TYPE=CELL:${contact.phone || ''}
+URL:https://linkedin.com/in/${contact.linkedin || ''}
+END:VCARD`;
+};
+
+const downloadVCard = (contact) => {
+    const vCardData = generateVCard(contact);
+    const blob = new Blob([vCardData], { type: 'text/vcard' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${contact.name.replace(' ', '_')}.vcf`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+};
 
 // Screens
 const screens = {
@@ -38,7 +65,7 @@ const screens = {
                     </button>
                     <span class="logo-q">Qard</span>
                 </div>
-                <div class="user-avatar-mini">
+                <div class="user-avatar-mini" onclick="renderScreen('config')">
                     <img src="${currentUser.avatar}" alt="User">
                 </div>
             </header>
@@ -46,36 +73,42 @@ const screens = {
             <div class="qr-card-container">
                 <div class="qr-frame">
                     <div class="qr-code-display">
-                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://qard.app/ruvel-maneiro" alt="QR Code">
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=BEGIN:VCARD%0AVERSION:3.0%0AFN:${currentUser.name}%0AORG:${currentUser.company}%0ATEL:${currentUser.phone}%0AEND:VCARD" alt="QR Code">
                     </div>
                     <div class="qr-user-info">
                         <h2>${currentUser.name}</h2>
                         <p class="role">${currentUser.role}</p>
                         <p class="company">${currentUser.company}</p>
-                        <div class="handle-pill">${currentUser.handle}</div>
                     </div>
-                    <button class="btn-linkedin-sync" style="background:#0077b5; margin-top:20px; width:auto; padding: 10px 20px;">
-                        <i data-lucide="linkedin"></i>
-                        Perfil LinkedIn
-                    </button>
+                    
+                    <div class="action-grid-full">
+                        <button class="btn-premium-social whatsapp" onclick="window.open('https://wa.me/${currentUser.whatsapp}')">
+                            <i data-lucide="phone"></i>
+                            WhatsApp
+                        </button>
+                        <button class="btn-premium-social linkedin" onclick="window.open('https://linkedin.com/in/${currentUser.linkedin}')">
+                            <i data-lucide="linkedin"></i>
+                            LinkedIn
+                        </button>
+                    </div>
                 </div>
             </div>
 
             <div class="main-action-area">
-                <button class="btn-scan">
+                <button class="btn-scan" onclick="renderScreen('scan')">
                     <i data-lucide="scan"></i>
-                    ESCANEAR QARD
+                    ESCANEAR CÓDIGO
                 </button>
             </div>
 
             <section class="contact-list-section">
                 <div class="list-header">
-                    <h3>Contactos Recientes</h3>
+                    <h3>Recientes</h3>
                     <button class="btn-view-all" onclick="renderScreen('contacts')">Ver todos</button>
                 </div>
                 
                 <div class="contacts-grid">
-                    ${recentContacts.map(c => `
+                    ${recentContacts.slice(0, 2).map(c => `
                         <div class="contact-card" onclick="window.showContactDetail(${c.id})">
                             <div class="contact-avatar">
                                 <img src="${c.avatar}" alt="${c.name}">
@@ -84,10 +117,7 @@ const screens = {
                                 <div class="name">${c.name}</div>
                                 <div class="meta">${c.company}</div>
                             </div>
-                            <div class="contact-time">
-                                <span class="time">${c.time}</span>
-                                <i data-lucide="chevron-right" size="16"></i>
-                            </div>
+                            <i data-lucide="chevron-right" size="16" style="color:var(--text-muted)"></i>
                         </div>
                     `).join('')}
                 </div>
@@ -103,25 +133,25 @@ const screens = {
                     </button>
                     <span class="logo-q">Qard</span>
                 </div>
-                <div class="user-avatar-mini">
+                <div class="user-avatar-mini" onclick="renderScreen('config')">
                     <img src="${currentUser.avatar}" alt="User">
                 </div>
             </header>
 
             <h1 class="section-title">Network</h1>
-            <p class="section-subtitle">Gestiona tu red profesional y sincroniza con LinkedIn.</p>
+            <p class="section-subtitle">Tus contactos industriales sincronizados.</p>
 
             <div class="search-container">
                 <div class="search-bar">
                     <i data-lucide="search"></i>
-                    <input type="text" placeholder="Buscar por nombre, empresa o cargo">
+                    <input type="text" placeholder="Buscar profesional...">
                 </div>
             </div>
 
             <div class="filters-scroll">
-                <button class="filter-chip active">Qard Network</button>
-                <button class="filter-chip">Phone Sync</button>
-                <button class="filter-chip">Industria</button>
+                <button class="filter-chip active">Todos</button>
+                <button class="filter-chip" onclick="window.syncPhoneContacts()">Sincronizar Teléfono</button>
+                <button class="filter-chip">LinkedIn</button>
             </div>
 
             <div class="contacts-detailed-list">
@@ -130,160 +160,226 @@ const screens = {
                         <div class="card-top">
                             <img src="${c.avatar}" class="large-avatar" alt="${c.name}">
                             <div class="card-top-info">
-                                <h4>${c.name} ${c.synced ? '<span class="sync-badge">SYNCED</span>' : ''}</h4>
-                                <p class="role-tag">${c.role}</p>
+                                <h4>${c.name}</h4>
+                                <p class="role-tag">${c.role || 'Partner Industrial'}</p>
                                 <div class="company-line">
                                     <i data-lucide="building-2" size="14"></i>
                                     <span>${c.company}</span>
                                 </div>
                             </div>
-                            <button class="btn-menu-dot">
-                                <i data-lucide="share-2"></i>
-                            </button>
-                        </div>
-                        <div class="action-buttons-grid">
-                            <button class="btn-contact-action" style="background:#0077b5; color:white;">
-                                <i data-lucide="linkedin" style="color:white"></i>
-                                <span>LinkedIn</span>
-                            </button>
-                            <button class="btn-contact-action">
-                                <i data-lucide="mail"></i>
-                                <span>Email</span>
-                            </button>
-                            <button class="btn-contact-action">
-                                <i data-lucide="phone"></i>
-                                <span>Whatsapp</span>
-                            </button>
+                            <i data-lucide="chevron-right" style="color:var(--text-muted)"></i>
                         </div>
                     </div>
                 `).join('')}
             </div>
-            <div id="contact-overlay" class="detail-overlay"></div>
         </div>
     `,
     'scan': () => `
-        <div class="screen-fade" id="scan-view" style="height: 80vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; text-align: center;">
-            <div id="scan-frame" style="width: 250px; height: 250px; border: 2px solid var(--electric-blue); border-radius: 30px; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer;">
-                <div id="scan-line" style="position: absolute; top: 0; width: 100%; height: 2px; background: var(--electric-blue); box-shadow: 0 0 20px var(--electric-blue); animation: scanning 2s ease-in-out infinite;"></div>
-                <i data-lucide="scan" size="80" style="color: rgba(59, 130, 246, 0.3)"></i>
-            </div>
-            
-            <div id="scan-status-container" style="margin-top: 32px;">
-                <h2 style="font-family: var(--font-heading);">Buscando Qard...</h2>
-                <p style="color: var(--text-muted); margin-top: 8px;">Alinea el código QR dentro del recuadro.</p>
-            </div>
-
-            <div id="new-contact-result" style="display: none; width: 100%;">
-                <div class="contact-card-large" style="margin: 0; background: var(--navy); border: 1px solid var(--electric-blue);">
-                    <div class="card-top">
-                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Alejandro" class="large-avatar" alt="Found Contact">
-                        <div class="card-top-info" style="text-align: left;">
-                            <h4>Alejandro Sanz</h4>
-                            <p class="role-tag">Director de Proyectos</p>
-                            <div class="company-line">
-                                <i data-lucide="building-2" size="14"></i>
-                                <span>Construcciones Modernas</span>
-                            </div>
-                        </div>
-                    </div>
-                    <button class="btn-scan" id="btn-save-contact" style="height: 50px; font-size: 14px; margin-top:16px;">
-                        <i data-lucide="user-plus"></i>
-                        GUARDAR EN QARD
-                    </button>
-                    <button class="btn-linkedin-sync" style="background:#0077b5; margin-top:10px;">
-                        <i data-lucide="linkedin"></i>
-                        Vincular LinkedIn
+        <div id="camera-view" class="screen-fade">
+            <div id="video-placeholder">
+                <video id="webcam" autoplay playsinline style="width:100%; height:100%; object-fit:cover;"></video>
+                <div class="scan-overlay">
+                    <div class="scan-box" id="scan-target"></div>
+                </div>
+                
+                <div style="position:absolute; bottom:40px; left:0; width:100%; text-align:center; padding: 0 40px;">
+                    <p style="color:white; font-size:14px; margin-bottom:20px; text-shadow: 0 2px 10px rgba(0,0,0,0.5);">Alinea el código QR de Qard para conectar</p>
+                    <button class="btn-scan" style="background:rgba(255,255,255,0.2); backdrop-filter:blur(10px); width:auto; padding:0 30px; border: 1px solid rgba(255,255,255,0.3);" onclick="renderScreen('my-qard')">
+                        CANCELAR
                     </button>
                 </div>
             </div>
-
-            <style>
-                @keyframes scanning {
-                    0% { top: 0; }
-                    50% { top: 100%; }
-                    100% { top: 0; }
-                }
-                .scan-success {
-                    animation: pulse-blue 0.5s ease-out;
-                    border-color: #4ade80 !important;
-                }
-            </style>
         </div>
     `,
     'config': () => `
         <div class="screen-fade" style="padding: 24px;">
-            <h1 class="section-title" style="padding: 0;">Configuración</h1>
-            <div style="margin-top: 32px;">
-                <div style="background: var(--card-bg); border-radius: 20px; padding: 20px; display: flex; align-items: center; gap: 16px; border: 1px solid rgba(255,255,255,0.05);">
-                    <img src="${currentUser.avatar}" style="width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--electric-blue);">
-                    <div>
-                        <h4 style="font-size: 18px;">${currentUser.name}</h4>
-                        <p style="color: var(--text-gray); font-size: 14px;">Cuenta Sincronizada con LinkedIn</p>
-                    </div>
-                </div>
+            <header class="top-bar" style="padding:0; margin-bottom:30px;">
+                <button class="btn-hamburger" onclick="renderScreen('my-qard')">
+                    <i data-lucide="arrow-left"></i>
+                </button>
+                <span class="logo-q">Perfil</span>
+                <div style="width:44px"></div>
+            </header>
+
+            <div style="background: var(--card-bg); border-radius: 28px; padding: 30px; text-align: center; border: 1px solid var(--glass-border);">
+                <img src="${currentUser.avatar}" style="width: 100px; height: 100px; border-radius: 50%; border: 3px solid var(--electric-blue); margin-bottom:16px;">
+                <h2 style="font-family: var(--font-heading);">${currentUser.name}</h2>
+                <p style="color: var(--text-gray); margin-bottom:24px;">${currentUser.role}</p>
+                
+                <button class="btn-premium-social linkedin" style="width:100%; justify-content:center;">
+                    <i data-lucide="linkedin"></i>
+                    Sincronizado con LinkedIn
+                </button>
             </div>
-            <div style="margin-top:20px; background:var(--card-bg); border-radius:20px; padding:20px;">
-                <h3 style="font-size:16px; margin-bottom:12px;">Sincronización Automática</h3>
-                <p style="font-size:13px; color:var(--text-muted);">Actualizar datos de contactos automáticamente cuando cambien su perfil en Qard o LinkedIn.</p>
+
+            <div style="margin-top:30px; display:grid; gap:16px;">
+                 <div style="background:var(--glass-bg); padding:20px; border-radius:20px; display:flex; justify-content:space-between; align-items:center;">
+                    <span>Privacidad del Perfil</span>
+                    <i data-lucide="chevron-right"></i>
+                 </div>
+                 <div style="background:var(--glass-bg); padding:20px; border-radius:20px; display:flex; justify-content:space-between; align-items:center;" onclick="window.syncPhoneContacts()">
+                    <span>Sincronizar Contactos</span>
+                    <i data-lucide="refresh-cw"></i>
+                 </div>
             </div>
         </div>
     `
 };
 
-// Functions
+// Global Functions
 window.showContactDetail = (contactId) => {
     const contact = [...recentContacts, ...allContacts].find(c => c.id === contactId);
     if (!contact) return;
 
-    const overlay = document.getElementById('contact-overlay') || document.querySelector('.detail-overlay');
-    if (!overlay) return;
-
+    const overlay = document.getElementById('contact-overlay');
     overlay.style.display = 'flex';
     overlay.innerHTML = `
         <button class="btn-close-detail" onclick="this.parentElement.style.display='none'">
             <i data-lucide="x"></i>
         </button>
         
-        <div class="contact-card-large" style="margin-top: 40px; box-shadow: 0 20px 50px rgba(0,0,0,0.8);">
-            <div class="card-top">
-                <img src="${contact.avatar}" class="large-avatar" alt="${contact.name}">
-                <div class="card-top-info">
-                    <h2 style="font-size: 24px; font-family: var(--font-heading);">${contact.name}</h2>
-                    <p class="role-tag">${contact.role || 'Contacto de Agenda'}</p>
-                    <div class="company-line">
-                        <i data-lucide="building-2" size="14"></i>
-                        <span>${contact.company}</span>
+        <div class="screen-fade" style="width:100%; max-width:400px; margin:auto;">
+            <div class="contact-card-large" style="background: var(--card-bg); border: 1px solid var(--glass-border);">
+                <div class="card-top">
+                    <img src="${contact.avatar}" class="large-avatar" alt="${contact.name}">
+                    <div class="card-top-info">
+                        <h2 style="font-family: var(--font-heading); font-size: 24px;">${contact.name}</h2>
+                        <p class="role-tag">${contact.role || 'Consultor Técnico'}</p>
+                        <div class="company-line">
+                            <i data-lucide="building-2" size="14"></i>
+                            <span>${contact.company}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action-grid-full">
+                    <button class="btn-premium-social whatsapp" onclick="window.open('https://wa.me/${contact.whatsapp}')">
+                        <i data-lucide="message-circle"></i>
+                        WhatsApp
+                    </button>
+                    <button class="btn-premium-social linkedin" onclick="window.open('https://linkedin.com/in/${contact.linkedin}')">
+                        <i data-lucide="linkedin"></i>
+                        LinkedIn
+                    </button>
+                    <button class="btn-premium-social" onclick="window.open('tel:${contact.phone}')" style="grid-column: span 2;">
+                        <i data-lucide="phone"></i>
+                        Llamar a ${contact.name.split(' ')[0]}
+                    </button>
+                </div>
+
+                <button class="btn-save-vcard" onclick="window.downloadContact(${contact.id})">
+                    <i data-lucide="user-plus"></i>
+                    AGREGAR A CONTACTOS
+                </button>
+                
+                <div style="margin-top:30px; text-align:center;">
+                    <p style="font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:12px;">Qard Industrial ID</p>
+                    <div style="background:white; padding:10px; border-radius:16px; display:inline-block;">
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(generateVCard(contact))}" style="width:150px;">
                     </div>
                 </div>
             </div>
-            
-            <div class="share-qr-section" style="background: rgba(255,255,255,0.02); padding: 24px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05);">
-                <h3 style="font-size:11px; letter-spacing:1px;">COMPARTIR TARJETA DIGITAL</h3>
-                <div class="mini-qr" style="margin: 10px 0;">
-                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=QardID:${contact.id}" alt="Contact QR">
-                </div>
-                <p style="font-size: 11px; color: var(--text-muted); text-align: center;">Muestra este QR para que otros agreguen a ${contact.name.split(' ')[0]} vía Qard.</p>
-            </div>
-
-            <button class="btn-linkedin-sync" style="background:#0077b5; margin-top:20px;">
-                <i data-lucide="linkedin"></i>
-                Ver Perfil LinkedIn
-            </button>
-            <p style="text-align: center; color: #4ade80; font-size: 11px; margin-top: 16px; font-weight: 600;">
-                <i data-lucide="refresh-cw" size="10" style="margin-right:4px;"></i>
-                Sincronización en tiempo-real activa
-            </p>
         </div>
     `;
     lucide.createIcons();
 };
 
+window.downloadContact = (id) => {
+    const contact = [...recentContacts, ...allContacts].find(c => c.id === id);
+    if (contact) {
+        downloadVCard(contact);
+        alert('VCard generada para ' + contact.name);
+    }
+};
+
+window.syncPhoneContacts = async () => {
+    try {
+        if ('contacts' in navigator && 'select' in navigator.contacts) {
+            const props = ['name', 'tel', 'email'];
+            const opts = { multiple: true };
+            const contacts = await navigator.contacts.select(props, opts);
+            
+            if (contacts.length > 0) {
+                contacts.forEach((c, index) => {
+                    const newContact = {
+                        id: 100 + index,
+                        name: c.name[0],
+                        company: "Contacto Teléfono",
+                        phone: c.tel ? c.tel[0] : "",
+                        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${c.name[0]}`,
+                        synced: true,
+                        whatsapp: c.tel ? c.tel[0].replace(/\D/g, '') : "",
+                        linkedin: ""
+                    };
+                    allContacts.push(newContact);
+                });
+                alert(`${contacts.length} contactos sincronizados exitosamente.`);
+                renderScreen('contacts');
+            }
+        } else {
+            // Mock simulation for desktop/browsers without API
+            const mockNames = ["Andrés García", "Beatriz López", "Carlos Ruiz"];
+            mockNames.forEach((name, i) => {
+                allContacts.push({
+                    id: 200 + i,
+                    name: name,
+                    company: "Importado de Teléfono",
+                    phone: "+58412" + Math.floor(1000000 + Math.random() * 9000000),
+                    avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`,
+                    synced: true,
+                    whatsapp: "58412000000" + i,
+                    linkedin: ""
+                });
+            });
+            alert('Sincronización simulada completada (Usa un móvil compatible para la API real de contactos). Cada contacto tiene ahora su propio Qard QR.');
+            renderScreen('contacts');
+        }
+    } catch (err) {
+        console.error("Error sincronizando contactos:", err);
+    }
+};
+
+async function startCamera() {
+    const video = document.getElementById('webcam');
+    if (!video) return;
+
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+        cameraStream = stream;
+        video.srcObject = stream;
+        
+        // Simulation of QR detection
+        setTimeout(() => {
+            if (currentScreen === 'scan') {
+                const target = document.getElementById('scan-target');
+                if (target) target.style.borderColor = "#4ade80";
+                setTimeout(() => {
+                    if (currentScreen === 'scan') {
+                        const randomId = Math.floor(Math.random() * allContacts.length);
+                        window.showContactDetail(allContacts[randomId].id);
+                    }
+                }, 1000);
+            }
+        }, 3000);
+    } catch (err) {
+        console.error("Error acceso cámara:", err);
+        alert("No se pudo acceder a la cámara. Asegúrate de dar permisos en tu navegador.");
+    }
+}
+
+function stopCamera() {
+    if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+        cameraStream = null;
+    }
+}
+
 function renderScreen(screenId) {
+    stopCamera();
     currentScreen = screenId;
     mainContent.innerHTML = screens[screenId]();
     lucide.createIcons();
     
-    // Update active nav state
     navItems.forEach(nav => {
         if (nav.dataset.screen === screenId) {
             nav.classList.add('active');
@@ -292,24 +388,8 @@ function renderScreen(screenId) {
         }
     });
 
-    mainContent.scrollTop = 0;
-
-    // Actions for scan screen
     if (screenId === 'scan') {
-        const frame = document.getElementById('scan-frame');
-        frame.addEventListener('click', () => {
-            frame.classList.add('scan-success');
-            document.getElementById('scan-line').style.display = 'none';
-            document.getElementById('scan-status-container').style.display = 'none';
-            setTimeout(() => {
-                document.getElementById('new-contact-result').style.display = 'block';
-                lucide.createIcons();
-                document.getElementById('btn-save-contact').addEventListener('click', () => {
-                    alert('¡Contacto guardado y sincronizado!');
-                    renderScreen('contacts');
-                });
-            }, 600);
-        });
+        startCamera();
     }
 }
 
